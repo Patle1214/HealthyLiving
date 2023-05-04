@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
   buttonOutlineText : { 
     color: '#0782F9',
     fontWeight: '700',
-    fontSize: '16'
+    fontSize: 16
   }
 })
