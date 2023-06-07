@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, KeyboardAvoidingView, TextInput, TouchableOpacity} from 'react-native'
 import React, { useState, useEffect } from 'react'
-import { auth } from '../firebase'
 import { useNavigation } from '@react-navigation/native'
 
 const Login = () => {
@@ -11,7 +10,7 @@ const Login = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
-        navigation.navigate("Home")
+        navigation.navigate("Options")
       }
     })
     return unsubscribe

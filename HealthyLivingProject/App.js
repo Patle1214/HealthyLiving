@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Login from './screens/Login.js';
 import Home from './screens/Home.js';
+import Sleep from './screens/Sleep.js';
 import Profile from './screens/Profile.js';
-import More from './screens/More.js';
+import Workout from './screens/Workout.js';
+import Options from './screens/Options.js';
+import Goals from './screens/Goals.js';
 
 
 const Stack = createNativeStackNavigator();
@@ -16,12 +18,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen options={{headerShown : false}} name="Login" component={Login} />
         <Stack.Screen options={{headerShown : false}} name="Home" component={Home} />
+        <Stack.Screen options={{headerShown : false}} name="Options" component={Options} />
+        <Stack.Screen options={{headerShown : false}} name="Sleep" component={Sleep} />
         <Stack.Screen options={{headerShown : false}} name="Profile" component={Profile} />
-        <Stack.Screen options={{headerShown : false}} name="More" component={More} />
-
-
+        <Stack.Screen options={{headerShown : false}} name="Workout" component={Workout} />
+        <Stack.Screen options={{headerShown : false}} name="Goals" component={Goals} />
       </Stack.Navigator>
     </NavigationContainer>
   );

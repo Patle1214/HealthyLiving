@@ -1,39 +1,112 @@
-import { StyleSheet, Text, View, KeyboardAvoidingView, Pressable} from 'react-native'
+import { StyleSheet, Text, View, KeyboardAvoidingView, Pressable, TouchableOpacity} from 'react-native'
 import React, { useState, useEffect } from 'react'
-import { auth } from '../firebase'
 import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons'; 
 import { Entypo } from '@expo/vector-icons'; 
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Profile = () => {
   const navigation = useNavigation()
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        navigation.navigate("Profile")
-      }
-    })
-    return unsubscribe
+  const [name, setName ] = useState("")
+  const [gender, setGender ] = useState("")
+  const [age, setAge ] = useState("")
+  const [sleep, setSleep ] = useState("")
+  const [fitness, setFitness ] = useState("")
+  const bmi = 25
+
+  
+  useEffect( () => {
+    retrieveUserData()
   }, [])
 
+  const retrieveUserData = async () => {
+    try {
+      setName(await AsyncStorage.getItem('userName'))
+      setGender(await AsyncStorage.getItem('userGender'))
+      setAge(await AsyncStorage.getItem('userAge'))
+      setFitness(await AsyncStorage.getItem('userFitness'))
+      setSleep(await AsyncStorage.getItem('userSleep'))
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
       <KeyboardAvoidingView 
         style={styles.container}
         behavior="padding" 
       >
-        <Text>Profile screen!</Text>
+        <View style={styles.marginContainer}></View>
+        <View style={styles.profileContainer}>
+        <Text style={styles.profileHeading}>{name}</Text>
+        
+        <View style={styles.profileRow}>
+          <Text style={styles.bodyText}>Gender</Text>
+          <Text style={styles.bodyText}>{gender}</Text>
+        </View>
+
+        <View style={styles.profileRow}>
+          <Text style={styles.bodyText}>Age</Text>
+          <Text style={styles.bodyText}>{age}</Text>
+        </View>
+        <View style={styles.profileRow}>
+          <Text style={styles.bodyText}>Fitness score</Text>
+          <Text style={styles.bodyText}>95</Text>
+        </View>
+
+        <View style={styles.profileRow}>
+          <Text style={styles.bodyText}>Current BMI</Text>
+          <Text style={styles.bodyText}>25</Text>
+        </View>
+
+        <View style={styles.profileRow}>
+          <Text style={styles.bodyText}>Caloric Maintenance</Text>
+          <Text style={styles.bodyText}>2500</Text>
+        </View>
+        </View>
+
+        <View style={styles.profileContainer}>
+          <Text style={styles.profileHeading}>Goals</Text>
+          
+          <View style={styles.profileRow}>
+            <Text style={styles.bodyText}>Fitness goal:</Text>
+            <Text style={styles.bodyText}>{fitness}</Text>
+          </View>
+
+          <View style={styles.profileRow}>
+            <Text style={styles.bodyText}>Sleep goal:</Text>
+            <Text style={styles.bodyText}>{sleep}</Text>
+          </View>
+
+          <View style={styles.profileRow}>
+            <Text style={styles.bodyText}>Daily caloric goal</Text>
+            <Text style={styles.bodyText}>2500</Text>
+          </View>
+
+        </View>
+
+        <View>
+          <TouchableOpacity style={styles.editButton} onPress={ () => { navigation.navigate("Options")}}><Text style={styles.editText}>Edit Profile</Text></TouchableOpacity>
+        </View>
+
+
         <View style={styles.navContainer}>
             <View style={styles.navBar}>
-                <Pressable onPress={() => navigation.replace("Home")}>
-                <AntDesign name="home" size={24} color="black" />
+            <Pressable onPress={() => navigation.replace("Home")}>
+                <MaterialCommunityIcons name="food-apple" size={30} color="#1679C1"/>
+                </Pressable>
+                <Pressable onPress={() => navigation.replace("Workout")}>
+                <MaterialCommunityIcons name="arm-flex" size={30} color="#1679C1"/>
+                </Pressable>
+                <Pressable onPress={() => navigation.replace("Sleep")}>
+                <AntDesign name="profile" size={24} color="#1679C1" />
                 </Pressable>
                 <Pressable onPress={() => navigation.replace("Profile")}>
-                <AntDesign name="profile" size={24} color="black" />
-                </Pressable>
-                <Pressable onPress={() => navigation.replace("More")}>
-                <Entypo name="dots-three-horizontal" size={24} color="black" />
+                <MaterialCommunityIcons name="face-man-profile" size={30} color="#1679C1"/>
                 </Pressable>
             </View>
         </View>
@@ -46,9 +119,12 @@ export default Profile
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#5C6F68'
+        backgroundColor: '#FFFFFr',
+      },
+
+      marginContainer: {
+        marginTop: 100
       },
     
       button : {
@@ -94,9 +170,50 @@ const styles = StyleSheet.create({
         padding: 16
       },
     
+      profileHeading: {
+        fontSize: 30,
+        fontWeight: '700',
+        color: '#FFFFFF',
+      },
+
+
+      profileContainer: {
+        marginBottom: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 15,
+        borderWidth: 1,
+        width: '85%',
+        paddingVertical: 20,
+        backgroundColor: '#B2CDE1',
+      },
+
+      profileRow: {
+        width: '90%',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 15,
+        paddingVertical: 2,
+        color: '#FFFFFF',
+      },
+
       iconBehave: {
         padding: 40
-      }
-    
-    
+      },
+
+      bodyText: {
+        fontSize: 18,
+        color: '#FFFFFF'
+      },
+      
+      editButton: {
+        borderRadius: 10,
+        backgroundColor: '#1679C1',
+        color: '#FFFFFF',
+        padding: 15,
+      },
+
+      editText: {
+        color: '#FFFFFF'
+      },
     })

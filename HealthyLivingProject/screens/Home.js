@@ -1,68 +1,129 @@
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native'
+import { Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView, Touchable, Button } from 'react-native'
 import React from 'react'
-import { auth } from '../firebase'
 import { useNavigation } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons'; 
 import { Entypo } from '@expo/vector-icons'; 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNDateTimePicker from '@react-native-community/datetimepicker';
+import Options from './Options';
 
-const data = ['Dave\'s hot chicken', 'Chick Fil-A', 'Kentucky Fried Chicken', 'item 4', 'item 5', 'item 6', 'item 7', 'item 8', 'item 9', 'item 10', 'item 11', 'item 12'];
+var nums= Array.from(Array(100+1).keys()).slice(18) 
+const data = {'Chicken Pilaf Salad': 500, 'Trader Joe\'s Salad': 200, 'Organic Pesto Pasta': 300, 'Jamba Juice White Gummy': 400, 'Panera Bread Chicken Soup': 500};
 
 const Home = () => {
   let iconHeight = 26;
   let iconWidth = 26;
   const navigation = useNavigation()
-  const handleSignOut = () => {
-    auth
-      .signOut()
-      .then( () => {
-        navigation.replace("Login")
-      })
-      .catch(error => alert(error.message))
-  }
-  const cards = data.slice(0, 10).map((item, index) => (
-    <View key={index} style={styles.card}>
-      <Text style={styles.title}>{item}</Text>
-    </View>
+  const [totalCalories, setTotalCalories] = useState(2500)
+  const [cardStates, setCardStates] = useState(Array(5).fill(false));
+
+  useEffect(() => {
+    checkUserAge();
+  }, []);
+
+
+  const checkUserAge = async () => {
+      try {
+        const hasAge = await AsyncStorage.getItem('hasAge');
+        if (hasAge === null) {
+          // Age has not been set, prompt user to enter it
+          navigation.navigate("Options")
+          return;
+        }
+  
+        const storedAge = await AsyncStorage.getItem('userAge');
+        if (storedAge !== null) {
+          // Age is already stored, do something with it (e.g., navigate to the next screen)
+          // Example: navigation.navigate('Home');
+          console.log("Already has age")
+          // navigation.navigate("Home")
+        }
+      } catch (error) {
+        console.log('Error retrieving user age from AsyncStorage:', error);
+      }
+    };
+
+
+  const handleCardPress = (index, key) => {
+    setCardStates((prevStates) => {
+      const newStates = [...prevStates];
+      newStates[index] = !newStates[index];
+      console.log('press!')
+      console.log(cardStates)
+      if (newStates[index]) {
+        setTotalCalories(totalCalories - data[key])
+      }
+      else {
+        setTotalCalories(totalCalories + data[key])
+      }
+      return newStates;
+    });
+  };
+
+  const cards = Object.entries(data).slice(0, 10).map(([key, value], index) => (
+    <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index , key)}>
+      <Text style={styles.card_title}>{key}</Text>
+      <Text>{value} cal</Text>
+    </TouchableOpacity>
   ));
 
   const [getMessage, setGetMessage] = useState({})
   useEffect(()=>{
     axios.get('http://169.234.40.162:5000').then(response => {
-      console.log("SUCCESS FLASK FLASK", response)
+      console.log("SUCCESS DATA HERE->", response)
       setGetMessage(response)
     }).catch(error => {
       console.log(error)
     })
-
   }, [])
+
+
+
 
 
   return (
     <View style={styles.container} >
-      <Text>Current user: {auth.currentUser?.email}</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSignOut}
-      >
-        <Text style={styles.buttonText}>Sign out </Text>
-      </TouchableOpacity>
+
       <View>
-        <Text style={styles.heading}>Healthy foods near you!</Text>
+        <View style={styles.heading_container}>
+        <Text style={styles.heading}>Healthy Living</Text>
+        <Text style={styles.sub_heading}>Food we found nearby you!</Text>
+
+        </View>
+        { /* 
+          <TextInput
+        style={styles.search_input}
+        value={searchInput}
+        placeholder="Search for food near you..."
+        onChangeText={(text) => setSearchInput(text)}
+        defaultValue={searchInput}
+        ></TextInput> 
+        */ }
+
       </View>
+      <Text>Calories remaining: {totalCalories}</Text>
       <ScrollView contentContainerStyle={styles.cardContainer}>{cards}</ScrollView>
+
+
+
+
       <View style={styles.navContainer}>
             <View style={styles.navBar}>
                 <Pressable onPress={() => navigation.replace("Home")}>
-                <AntDesign name="home" size={24} color="black" />
+                <MaterialCommunityIcons name="food-apple" size={30} color="#1679C1"/>
+                </Pressable>
+                <Pressable onPress={() => navigation.replace("Workout")}>
+                <MaterialCommunityIcons name="arm-flex" size={30} color="#1679C1"/>
+                </Pressable>
+                <Pressable onPress={() => navigation.replace("Sleep")}>
+                <AntDesign name="profile" size={24} color="#1679C1" />
                 </Pressable>
                 <Pressable onPress={() => navigation.replace("Profile")}>
-                <AntDesign name="profile" size={24} color="black" />
-                </Pressable>
-                <Pressable onPress={() => navigation.replace("More")}>
-                <Entypo name="dots-three-horizontal" size={24} color="black" />
+                <MaterialCommunityIcons name="face-man-profile" size={30} color="#1679C1"/>
                 </Pressable>
             </View>
         </View>
@@ -77,7 +138,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#5C6F68',
+    backgroundColor: '#FFFFFr',
     scrollBehavior: 'auto',
   },
   scrollView: {
@@ -86,11 +147,11 @@ const styles = StyleSheet.create({
 
   button : {
     backgroundColor: '#0782F9',
-    width: '60%',
-    padding: 15,
+    width: '30%',
+    padding: 5,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 20
+    marginTop: 48
   },
 
   buttonOutline : { 
@@ -103,7 +164,7 @@ const styles = StyleSheet.create({
   buttonText : { 
     color: 'white',
     fontWeight: '700',
-    fontSize: 16
+    fontSize: 14
   },
 
   buttonOutlineText : { 
@@ -120,34 +181,39 @@ const styles = StyleSheet.create({
 
   navBar: {
     flexDirection: 'row',
-    backgroundColor: '#eee',
-    width:'95%',
+    width:'100%',
     justifyContent: 'space-evenly',
+    backgroundColor: '#eee',
     borderRadius: 40,
     padding: 16
   },
 
   iconBehave: {
-    padding: 40
+    padding: 15
   },
 
   cardContainer: {
     flex: 1,
     alignItems: 'center',
     marginVertical: 12,
-    backgroundColor: 'green',
     width: '100%',
-    height: '100%',
+    maxHeight: '85%',
   },
   card: {
     backgroundColor: '#fff',
-    padding: 2,
-    marginBottom: 16,
-    borderRadius: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#4888B7',
     marginHorizontal: 'auto',
     flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -155,19 +221,61 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-    minWidth: '80%',
-    minHeight:'15%',
+    elevation: 2,
+    width: 350,
+    maxHeight: 50,
   },
-  title: {
-    fontSize: 24,
+
+  active_card: {
+    backgroundColor: '#0782F9',
+  },
+  
+  card_title: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
 
   heading: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 24
-  }
+    fontSize: 35,
+    fontWeight: 900,
+    marginTop: 60,
+    color: '#1679C1',
+    width: '100%',
+    textAlign: 'center',
+  },
+
+  sub_heading: {
+    fontSize: 18,
+    fontWeight: 500,
+    marginTop: 24,
+    color: '#1679C1',
+    width: '100%',
+    textAlign: 'center',
+  },
+
+  
+
+  search_input: {
+    marginTop: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    width: 360,
+    height: 50,
+    color: '#000000',
+    padding: 10,
+    fontSize: 16
+  },
+
+  heading_container: {
+    padding: 0,
+    marginTop: 12,
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent:' center',
+  },
+
+  temp: {
+    marginTop:12 ,
+  },
 
 })
