@@ -14,6 +14,9 @@ import Options from './Options';
 var nums= Array.from(Array(100+1).keys()).slice(18) 
 const data = {'Chicken Pilaf Salad': 500, 'Trader Joe\'s Salad': 200, 'Organic Pesto Pasta': 300, 'Jamba Juice White Gummy': 400, 'Panera Bread Chicken Soup': 500};
 
+const temp_data = { 'Panera Bread': [['Chicken Noodle Soup', 'Irvine', '15.99', [250, 50, 25]], ['Clam Chowder', 'Irvine', [180, 60, 25]]], 'Panera Bread # 2': [['Chicken Noodle Soup', 'Irvine', '15.99', [250, 50, 25]], 
+['Clam Chowder', 'Irvine', [180, 60, 25]]], }
+
 const Home = () => {
   let iconHeight = 26;
   let iconWidth = 26;
@@ -55,22 +58,40 @@ const Home = () => {
       console.log('press!')
       console.log(cardStates)
       if (newStates[index]) {
-        setTotalCalories(totalCalories - data[key])
+        setTotalCalories(totalCalories - temp_data[key][0][3][0])
       }
       else {
-        setTotalCalories(totalCalories + data[key])
+        setTotalCalories(totalCalories + temp_data[key][0][3][0])
       }
       return newStates;
     });
   };
 
+  { /*
   const cards = Object.entries(data).slice(0, 10).map(([key, value], index) => (
     <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index , key)}>
       <Text style={styles.card_title}>{key}</Text>
       <Text>{value} cal</Text>
     </TouchableOpacity>
   ));
+  */ }
+  const cards = Object.entries(temp_data).slice(0, 10).map(([key, value], index) => (
+    <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index , key)}>
+      <View style={styles.column}>
+        <Text style={styles.card_title}>{value[0][0]}</Text>
+        <Text>{key}</Text>
+      </View>
+      <View style={styles.column_two}>
+        <Text>{value[0][3][0]} Cal</Text>
+        <Text>{value[0][3][1]} Protein</Text>
+        <Text>{value[0][3][2]} Sugar</Text>
+      </View>
 
+
+
+
+    </TouchableOpacity>
+  ));
   const [getMessage, setGetMessage] = useState({})
   useEffect(()=>{
     axios.get('http://169.234.40.162:5000').then(response => {
@@ -223,7 +244,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 2,
     width: 350,
-    maxHeight: 50,
+    maxHeight: 100,
   },
 
   active_card: {
@@ -277,5 +298,14 @@ const styles = StyleSheet.create({
   temp: {
     marginTop:12 ,
   },
+
+  column: {
+    flex: 7,
+  },
+
+  column_two: {
+    flex: 3,
+    textAlign: 'right',
+  }
 
 })

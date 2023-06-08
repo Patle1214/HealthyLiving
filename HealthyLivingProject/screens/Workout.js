@@ -16,10 +16,10 @@ const Workout = () => {
   const navigation = useNavigation()
   const [workoutDay, setWorkoutDay] = useState('')
   const [workoutSet, setWorkoutSet] = useState(push_workouts)
-  const [caloriesBurned, setCaloriesBurned] = useState(0)
-  const [exerciseTime, setExerciseTime] = useState(0)
-  const [steps, setSteps] = useState(0)
-  const [walkDistance, setWalkDistance] = useState(0)
+  const [caloriesBurned, setCaloriesBurned] = useState(250)
+  const [exerciseTime, setExerciseTime] = useState(45)
+  const [steps, setSteps] = useState(2500)
+  const [walkDistance, setWalkDistance] = useState(1.3)
 
   console.log(workoutSet)
 
@@ -50,11 +50,11 @@ const Workout = () => {
             <Text style={styles.heading_one}>Exercises</Text>
             <View style={styles.iconRow}>
               <MaterialCommunityIcons name="fire" size={30} color="#1679C1"/>
-              <Text>250 Cal</Text>
+              <Text>{caloriesBurned} Cal</Text>
             </View>
             <View style={styles.iconRow}>
               <MaterialCommunityIcons name="clock-outline" size={30} color="#1679C1"/>
-              <Text>60 Min</Text>
+              <Text>{exerciseTime} Min</Text>
             </View>
 
           </View>
@@ -62,11 +62,11 @@ const Workout = () => {
             <Text style={styles.heading_one}>Steps</Text>
             <View style={styles.iconRow}>
               <MaterialCommunityIcons name="foot-print" size={30} color="#1679C1"/>
-              <Text>2650 Steps</Text>
+              <Text>{steps} Steps</Text>
             </View>
             <View style={styles.iconRow}>
               <MaterialCommunityIcons name="clock-outline" size={30} color="#1679C1"/>
-              <Text>45 Min</Text>
+              <Text>{walkDistance} KM</Text>
             </View>
           </View>
 

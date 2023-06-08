@@ -5,10 +5,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons'; 
 import { Entypo } from '@expo/vector-icons'; 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const Sleep = () => {
   const navigation = useNavigation()
+  const [sleep, setSleep] = useState('')
+  const [avgSleep, setAvgSleep] = useState(8.5)
+  const date = new Date()
+  const options = { weekday: 'long' };
+  const day = date.toLocaleDateString('en-US', options).split(',')[0];
+
+  useEffect( () => {
+    retrieveUserData()
+  }, [])
+  
+  const retrieveUserData = async () => {
+    try {
+      setSleep(await AsyncStorage.getItem('userSleep'))
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
 
   return (
       <KeyboardAvoidingView 
@@ -49,9 +69,13 @@ const Sleep = () => {
 
         <View style={styles.statsContainer}>
           <Text style={styles.statsHeading}>Average Sleep</Text>
+          <Text>{avgSleep}</Text>
+
         </View>
         <View style={styles.statsContainer}>
           <Text style={styles.statsHeading}>Sleep Goal</Text>
+          <Text>{sleep} {day}</Text>
+
         </View>
 
         <View style={styles.navContainer}>
