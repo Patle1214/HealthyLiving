@@ -7,8 +7,8 @@ app = Flask(__name__)
 def index():
     #city = request.form["city"]
     #goal = request.form["goal"]
-    #return jsonify(test())
-    return test()
+    return jsonify(test())
+    #return test()
     #return jsonify(test(city,goal))
 
 

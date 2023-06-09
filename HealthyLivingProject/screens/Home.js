@@ -24,6 +24,11 @@ const Home = () => {
   const [totalCalories, setTotalCalories] = useState(2500)
   const [cardStates, setCardStates] = useState(Array(5).fill(false));
   const [jsonData, setJsonData] = useState({})
+  const [cards, setCards] = useState([]);
+
+  const [startIndex, setStartIndex] = useState(0)
+  const [endIndex, setEndIndex] = useState(5)
+
 
 
   useEffect(() => {
@@ -53,17 +58,18 @@ const Home = () => {
     };
 
 
-  const handleCardPress = (index, key) => {
+  const handleCardPress = (index, key, value) => {
     setCardStates((prevStates) => {
       const newStates = [...prevStates];
       newStates[index] = !newStates[index];
       console.log('press!')
       console.log(cardStates)
+      console.log(jsonData["IRVINE"][key][0])
       if (newStates[index]) {
-        setTotalCalories(totalCalories - temp_data[key][0][3][0])
+        setTotalCalories(totalCalories - jsonData["IRVINE"][key][0][3][0])
       }
       else {
-        setTotalCalories(totalCalories + temp_data[key][0][3][0])
+        setTotalCalories(totalCalories + jsonData["IRVINE"][key][0][3][0])
       }
       return newStates;
     });
@@ -77,50 +83,52 @@ const Home = () => {
     </TouchableOpacity>
   ));
   */ }
-  const cards = Object.entries(temp_data).slice(0, 10).map(([key, value], index) => (
-    <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index , key)}>
-      <View style={styles.column}>
-        <Text style={styles.card_title}>{value[0][0]}</Text>
-        <Text>{key}</Text>
-      </View>
-      <View style={styles.column_two}>
-        <Text>{value[0][3][0]} Cal</Text>
-        <Text>{value[0][3][1]} Protein</Text>
-        <Text>{value[0][3][2]} Sugar</Text>
-      </View>
 
 
 
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://192.168.0.249:5000/');
+      //console.log(response)
+      setJsonData(await response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    </TouchableOpacity>
-  ));
-
-
-
-  useEffect(()=>{
-    axios.get('http://192.168.0.249:5000/').then(response => {
-      // console.log("SUCCESS DATA HERE->", response)
-      //const string_resp = JSON.stringify(response)
-      //setJsonData(JSON.parse(string_resp))
-      console.log(response)
-      setJsonData(JSON.parse(response.data))
-      console.log(jsonData)
-      //setJsonData(JSON.stringify(response))
-      //setJsonData(response)
-    }).catch(error => {
-      console.log(error)
-    })
+  useEffect(() => {
+    fetchData()
+    console.log(jsonData)
   }, [])
 
-    console.log
+
+  useEffect(() => {
+    if (jsonData["IRVINE"]) {
+      const newCards = Object.entries(jsonData["IRVINE"]).slice(startIndex, endIndex).map(([key, value], index) => (
+        <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index, key, value)}>
+          <View style={styles.column}>
+            <Text>{key}</Text>
+            <Text>{value[0][0]}</Text>
+          </View>
+          <View style={styles.column_two}>
+            <Text>{value[0][3][0]} Cal</Text>
+            <Text>{value[0][3][1]}g Protein</Text>
+            <Text>{value[0][3][2]}g Sugar</Text>
+          </View>
+
+        </TouchableOpacity>
+      ));
+      setCards(newCards);
+    }
+  }, [jsonData, cardStates]);
+
 
 
 
 
 
   return (
-    <View style={styles.container} >
-
+    <View style={styles.container}>
       <View>
         <View style={styles.heading_container}>
         <Text style={styles.heading}>Healthy Living</Text>
@@ -256,7 +264,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 2,
     width: 350,
-    maxHeight: 100,
+    maxHeight: 80,
   },
 
   active_card: {
@@ -304,7 +312,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignContent: 'center',
     alignItems: 'center',
-    justifyContent:' center',
+    justifyContent:'center',
   },
 
   temp: {
