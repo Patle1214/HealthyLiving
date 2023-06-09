@@ -23,6 +23,8 @@ const Home = () => {
   const navigation = useNavigation()
   const [totalCalories, setTotalCalories] = useState(2500)
   const [cardStates, setCardStates] = useState(Array(5).fill(false));
+  const [jsonData, setJsonData] = useState({})
+
 
   useEffect(() => {
     checkUserAge();
@@ -92,15 +94,25 @@ const Home = () => {
 
     </TouchableOpacity>
   ));
-  const [getMessage, setGetMessage] = useState({})
+
+
+
   useEffect(()=>{
-    axios.get('http://169.234.40.162:5000').then(response => {
-      console.log("SUCCESS DATA HERE->", response)
-      setGetMessage(response)
+    axios.get('http://192.168.0.249:5000/').then(response => {
+      // console.log("SUCCESS DATA HERE->", response)
+      //const string_resp = JSON.stringify(response)
+      //setJsonData(JSON.parse(string_resp))
+      console.log(response)
+      setJsonData(JSON.parse(response.data))
+      console.log(jsonData)
+      //setJsonData(JSON.stringify(response))
+      //setJsonData(response)
     }).catch(error => {
       console.log(error)
     })
   }, [])
+
+    console.log
 
 
 

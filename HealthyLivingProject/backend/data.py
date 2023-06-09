@@ -8,4 +8,4 @@ def test():
         #return(data[location])
         return data
     
-print(test("IRVINE"))
+# print(test("IRVINE"))
