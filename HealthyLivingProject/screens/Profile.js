@@ -140,7 +140,6 @@ const Profile = () => {
     var temp_bmr = (4.536 * weight) + (15.88 * height) - (5 * parseInt(age))
     setHealthScore( Math.floor((Math.min((exerciseTime / 30) * 0.5, 0.5) + Math.min((stepCount / 10000) * 0.3, 0.3) + Math.min((calories / temp_bmr) * 0.2, 0.2)) * 100 ))
     console.log("EXIT #2")
-    setHealthScore(30)
 
     postCaloricMain()
 
