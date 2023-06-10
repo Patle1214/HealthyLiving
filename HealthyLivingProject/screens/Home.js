@@ -233,8 +233,7 @@ const Home = () => {
 
 
   return (
-    <View style={styles.container} >
-
+    <View style={styles.container}>
       <View>
         <View style={styles.heading_container}>
         <Text style={styles.heading}>Healthy Living</Text>
@@ -373,7 +372,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 2,
     width: 350,
-    maxHeight: 100,
+    maxHeight: 80,
   },
 
   active_card: {
@@ -422,6 +421,7 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     justifyContent:'center',
+    justifyContent:'center',
   },
 
   temp: {
@@ -435,7 +435,6 @@ const styles = StyleSheet.create({
   column_two: {
     flex: 3,
     textAlign: 'right',
-  },
   
   refresh: {
     marginTop: 4,
