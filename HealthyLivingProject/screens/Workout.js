@@ -5,23 +5,113 @@ import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons'; 
 import { Entypo } from '@expo/vector-icons'; 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AppleHealthKit, { HealthValue, HealthKitPermissions} from 'react-native-health'
 
 
-var pull_workouts = ['Lateral Pulldowns', 'Bicep Curls', 'Deadlifts', 'Lateral Raises', 'Barbell Rows', 'Dumbbell Rows']
+const test_calories = 0
+const test_step = 0
+const test_distance = 0
+
+const permissions = {
+  permissions: {
+    read: [ 
+      AppleHealthKit.Constants.Permissions.ActivitySummary,
+      AppleHealthKit.Constants.Permissions.StepCount,
+      AppleHealthKit.Constants.Permissions.DistanceWalkingRunning
+    ]
+  },
+}
+
+
+
+var pull_workouts = ['Lat Pulldowns', 'Bicep Curls', 'Deadlifts', 'Lateral Raises', 'Barbell Rows', 'Dumbbell Rows']
 var push_workouts = ['Bench Press', 'Incline Chest Press', 'Chest Flys', 'Tricep Pushdowns', 'Shoulder Press', 'Tricep Skull Crushers']
 var leg_workouts = ['Squats', 'Calf Raises', 'Leg Extensions', 'Curls', 'Romanian Deadlifts',  'Dumbbell Lunges' ]
+
+var workouts = {
+  'Monday': pull_workouts,
+  'Tuesday': leg_workouts,
+  'Wednesday': push_workouts,
+  'Thursday': pull_workouts,
+  'Friday': pull_workouts,
+  'Saturday': push_workouts,
+  'Sunday': pull_workouts,
+}
 
 
 const Workout = () => {
   const navigation = useNavigation()
   const [workoutDay, setWorkoutDay] = useState('')
-  const [workoutSet, setWorkoutSet] = useState(push_workouts)
-  const [caloriesBurned, setCaloriesBurned] = useState(250)
+  const d_options = { weekday: 'long' }
+  const day = new Date().toLocaleDateString('en-US', d_options).split(',')[0];
+  const [workoutSet, setWorkoutSet] = useState(workouts[day])
+  const [caloriesBurned, setCaloriesBurned] = useState(2500)
   const [exerciseTime, setExerciseTime] = useState(45)
   const [steps, setSteps] = useState(2500)
   const [walkDistance, setWalkDistance] = useState(1.3)
 
-  console.log(workoutSet)
+
+  AppleHealthKit.initHealthKit(permissions, (error) => {
+    /* Called after we receive a response from the system */
+  
+    if (error) {
+      console.log('[ERROR] Cannot grant permissions!')
+    }
+  
+    /* Can now read or write to HealthKit */
+  
+    const options = {
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString(),
+    }
+  
+    AppleHealthKit.getActivitySummary(
+      (options),
+      (err, results) => {
+        if (err) {
+          return
+        }
+        setCaloriesBurned(results[0]["activeEnergyBurned"])
+        console.log("Calories burned", caloriesBurned)
+        setExerciseTime(results[0]["appleExerciseTime"])
+        console.log("Exercise time", exerciseTime)
+      },
+    )
+  
+    AppleHealthKit.getStepCount(
+      ({}),
+      (err, results) => {
+        if (err) {
+          return
+        }
+        
+        setSteps(Number(results["value"]).toFixed(0))
+        console.log("Steps:", steps)
+      },
+    )
+  
+    const distanceOptions = {
+      unit: 'mile',
+      date: (new Date()).toISOString()
+    }
+  
+    AppleHealthKit.getDistanceWalkingRunning(
+      (distanceOptions),
+      (err, results) => {
+        if (err) {
+          return
+        }
+        console.log("BEGIN DIST")
+        setWalkDistance(Number(results["value"]).toFixed(2))
+        console.log("Walk distance:", steps)
+        console.log("END DIST")
+
+      },
+    )
+  
+  })
+
+  //console.log(workoutSet)
 
   return (
       <KeyboardAvoidingView 
@@ -65,8 +155,8 @@ const Workout = () => {
               <Text>{steps} Steps</Text>
             </View>
             <View style={styles.iconRow}>
-              <MaterialCommunityIcons name="clock-outline" size={30} color="#1679C1"/>
-              <Text>{walkDistance} KM</Text>
+              <MaterialCommunityIcons name="map-marker-distance" size={30} color="#1679C1"/>
+              <Text>{walkDistance} Miles</Text>
             </View>
           </View>
 

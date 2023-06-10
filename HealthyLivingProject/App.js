@@ -18,11 +18,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen options={{headerShown : false}} name="Home" component={Home} />
+      <Stack.Screen options={{headerShown : false}} name="Profile" component={Profile} />
+
+      <Stack.Screen options={{headerShown : false}} name="Home" component={Home} />
+      <Stack.Screen options={{headerShown : false}} name="Sleep" component={Sleep} />
+      <Stack.Screen options={{headerShown : false}} name="Workout" component={Workout} />
         <Stack.Screen options={{headerShown : false}} name="Options" component={Options} />
-        <Stack.Screen options={{headerShown : false}} name="Sleep" component={Sleep} />
-        <Stack.Screen options={{headerShown : false}} name="Profile" component={Profile} />
-        <Stack.Screen options={{headerShown : false}} name="Workout" component={Workout} />
         <Stack.Screen options={{headerShown : false}} name="Goals" component={Goals} />
       </Stack.Navigator>
     </NavigationContainer>

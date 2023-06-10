@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native'
 
 
 const fitness = ['Lose weight', 'Gain muscle', 'Just trying to be healthy!']
-const sleep = ['Sleep more', 'Sleep less', 'Consistent Sleep Schedule']
+const sleep = ['6-8', '8-10', '10+']
 
 
 const Goals = () => {
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         marginTop:100,
         width:'100%',
         height:'100%',
-        flexDirection: 'col',
+        flexDirection: 'column',
         textAlign: 'center',
         alignContent: 'center',
         padding: 24,

@@ -6,35 +6,153 @@ import { AntDesign } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons'; 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AppleHealthKit, { HealthValue, HealthKitPermissions} from 'react-native-health'
+
+const permissions = {
+  permissions: {
+    read: [
+      AppleHealthKit.Constants.Permissions.SleepAnalysis,
+      AppleHealthKit.Constants.Permissions.HeartRate
+    ]
+  },
+}
+
 
 
 
 const Sleep = () => {
   const navigation = useNavigation()
   const [sleep, setSleep] = useState('')
-  const [avgSleep, setAvgSleep] = useState(8.5)
+  const [avgSleep, setAvgSleep] = useState('')
   const date = new Date()
   const options = { weekday: 'long' };
-  const day = date.toLocaleDateString('en-US', options).split(',')[0];
+  //const day = date.toLocaleDateString('en-US', options).split(',')[0];
+  const [dailyMinutes, setDailyMinutes] = useState('')
+  const [sleepPeriods, setSleepPeriods] = useState(0)
+  const [goal, setGoal] = useState('')
+  const [message, setMessage] = useState('empty')
+  const [bpm, setBpm] = useState(0)
 
-  useEffect( () => {
-    retrieveUserData()
-  }, [])
+
+
+  const retrieveSleep = () => {
+    AppleHealthKit.initHealthKit(permissions, (error) => {
+    /* Called after we receive a response from the system */
   
-  const retrieveUserData = async () => {
+      if (error) {
+        console.log('[ERROR] Cannot grant permissions!')
+      }
+    
+      /* Can now read or write to HealthKit */
+      
+      const sleepOptions = {
+        startDate: new Date(Date.now() - ( 3600 * 1000 * 24)).toISOString(),
+        endDate: new Date().toISOString(),
+        ascending: true
+      }
+
+      AppleHealthKit.getSleepSamples((sleepOptions), (err, results) => {
+        if (err) {
+          console.log(err)
+          return;
+        }
+        
+        var sPeriods = 0
+        var minutes = 0
+        for (var i = 0; i < results.length; i++) {
+          if (results[i].value == 'INBED') {
+            sPeriods += 1
+            console.log(results[i])
+            minutes += Math.ceil((new Date(results[i].endDate) - new Date(results[i].startDate)) / (1000 * 60))
+          }
+        }
+        setSleepPeriods(sPeriods)
+        setDailyMinutes(minutes)
+        //console.log("MIN: HEREE", minutes)
+      });
+      
+      var curr_date = new Date()
+
+      let bpmOptions = {
+        unit: 'bpm', // optional; default 'bpm'
+        startDate: new Date(curr_date.getFullYear(), curr_date.getMonth(), curr_date.getDate() - 1, 21).toISOString(),
+        endDate: new Date(curr_date.getFullYear(), curr_date.getMonth(), curr_date.getDate(), 9).toISOString()
+      }
+
+      AppleHealthKit.getHeartRateSamples(
+        bpmOptions,
+        (err, results) => {
+          if (err) {
+            return
+          }
+          var sum = 0
+          for (var i = 0; i < results.length; i++) {
+            sum += results[i].value
+          }
+
+          setBpm(Math.floor(sum / results.length))
+          console.log(bpm)
+        },
+      )
+    })
+  }
+
+  const retrieveGoal = async () => {
+
     try {
-      setSleep(await AsyncStorage.getItem('userSleep'))
+      setGoal(await AsyncStorage.getItem("userSleep"))
+      console.log(goal)
+      if (goal == "6-8") {
+        if (dailyMinutes / 60 < 6) {
+          setMessage("We recommend sleeping more")
+        }
+        else if (dailyMinutes / 60 > 8){
+          setMessage("We recommend sleeping less")
+        }
+        else {
+          setMessage("You hit your goal, great job!")
+        }
+      } else if (goal == '8-10') {
+        if (dailyMinutes / 60 < 8) {
+          setMessage("We recommend sleeping more")
+        }
+
+        else if (dailyMinutes / 60 > 10){
+          setMessage("We recommend sleeping less")
+        }
+        else {
+          setMessage("You hit your goal, great job!")
+        } 
+      }
+      else {
+        if (dailyMinutes / 60 < 10) {
+          setMessage("We recommend sleeping more")
+        }
+        else {
+          setMessage("You hit your goal, great job!")
+        }
+      }
     }
-    catch (error) {
-      console.log(error)
+
+    catch (err) {
+      console.log(err)
     }
   }
+
+
+  useEffect( () => {
+    retrieveSleep()
+    retrieveGoal()
+    //updateSleep()
+  }, [])
+  
 
   return (
       <KeyboardAvoidingView 
         style={styles.container}
         behavior="padding" 
       >
+        { /* 
         <View style={styles.sleepContainer}>
           <Text style={styles.sleepHeading}>Sleep Log</Text>
           <View style={styles.sleepRow}>
@@ -66,16 +184,28 @@ const Sleep = () => {
             <Text>8 Hr 0 Min</Text>
           </View>
         </View>
+    */ }
+        <View>
+          <Text style={styles.heading}>Sleep Stats</Text>
+        </View>
 
         <View style={styles.statsContainer}>
-          <Text style={styles.statsHeading}>Average Sleep</Text>
-          <Text>{avgSleep}</Text>
-
+          <Text style={styles.statsHeading}>Yesterday you slept...</Text>
+          <Text style = {styles.bodyText}>{Math.floor(Number(dailyMinutes)/60)} Hours {Number(dailyMinutes)%60} Mins</Text>
+          <Text style = {styles.bodyText}></Text>
         </View>
         <View style={styles.statsContainer}>
-          <Text style={styles.statsHeading}>Sleep Goal</Text>
-          <Text>{sleep} {day}</Text>
+          <Text style={styles.statsHeading}>Based on your goals</Text>
+          <Text style = {styles.bodyText}>{message}</Text>
+        </View>
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsHeading}>Last Night Phone Usage</Text>
+          <Text style = {styles.bodyText}>You checked your phone {sleepPeriods} times</Text>
+        </View>
 
+        <View style={styles.statsContainer}>
+          <Text style={styles.statsHeading}>Average Sleep Heart Rate</Text>
+          <Text style = {styles.bodyText}>{bpm} bpm</Text>
         </View>
 
         <View style={styles.navContainer}>
@@ -103,8 +233,16 @@ export default Sleep
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
+        // justifyContent: 'center',
+      },
+      heading: {
+        fontSize: 35,
+        fontWeight: 900,
+        marginTop: 60,
+        color: '#1679C1',
+        width: '100%',
+        textAlign: 'center',
       },
     
       button : {
@@ -190,9 +328,14 @@ const styles = StyleSheet.create({
       },
 
       statsHeading: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 600,
         textAlign: 'center',
         color: '#FFFFFF'
+      },
+
+      bodyText: {
+        textAlign: 'center',
+        padding: 8
       }
     })

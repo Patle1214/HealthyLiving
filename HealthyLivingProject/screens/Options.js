@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     temp: {
         marginTop:100,
         width:'100%',
-        flexDirection: 'col',
+        flexDirection: 'column',
         textAlign: 'center',
         alignContent: 'center',
         padding: 24,

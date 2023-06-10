@@ -6,6 +6,19 @@ import { AntDesign } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons'; 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AppleHealthKit, { HealthValue, HealthKitPermissions} from 'react-native-health'
+import appleHealthKit from 'react-native-health';
+
+const permissions = {
+  permissions: {
+    read: [
+      AppleHealthKit.Constants.Permissions.Height,
+      AppleHealthKit.Constants.Permissions.Weight,
+      AppleHealthKit.Constants.Permissions.ActivitySummary,
+      AppleHealthKit.Constants.Permissions.StepCount]
+  },
+}
+
 
 
 const Profile = () => {
@@ -15,12 +28,138 @@ const Profile = () => {
   const [age, setAge ] = useState("")
   const [sleep, setSleep ] = useState("")
   const [fitness, setFitness ] = useState("")
-  const bmi = 25
+  const [caloricMaint, setCaloricMaint] = useState(0)
+  const [caloricGoal, setCaloricGoal] = useState(0)
+  const [bmi, setBmi] = useState(0)
+  const [height, setHeight] = useState(0) // will return 63 inches not (5 '3 )
+  const [weight, setWeight] = useState(0)
+  const [calories, setCalories] = useState(0)
+  const [exerciseTime, setExerciseTime] = useState(0)
+  const [stepCount, setStepCount] = useState(0)
+  const [healthScore, setHealthScore] = useState(0)
 
   
+  const postCaloricMain = async () => {
+    try {
+      await AsyncStorage.setItem('caloricMaint', toString(caloricMaint))
+      console.log("INSIDE POST")
+      console.log(caloricMaint)
+      console.log("OUTSIDE POST")
+    }
+    catch (err) {
+      return err
+    }
+  }
+
+
+
+  const retrieveHealthKit = () => {
+    try {
+      AppleHealthKit.initHealthKit(permissions, (error) => {
+      /* Called after we receive a response from the system */
+    
+        if (error) {
+          console.log('[ERROR] Cannot grant permissions!')
+        }
+      
+        /* Can now read or write to HealthKit */
+      
+        AppleHealthKit.getLatestHeight(null, (err, results) => {
+          if (err) {
+            console.log('error getting latest height: ', err)
+            return
+          }
+          setHeight(results["value"])
+          console.log("Height : ", height)
+        })
+      
+        AppleHealthKit.getLatestWeight({unit: 'pound'}, (err, results) => {
+          if (err) {
+            console.log('error getting latest weight: ', err)
+            return
+          }
+    
+          setWeight(results["value"])
+          console.log("Weight: ", weight)
+        })
+
+        const options = {
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+        }
+
+        AppleHealthKit.getActivitySummary(
+          (options),
+          (err, results) => {
+            if (err) {
+              return
+            }
+            
+            var cal = results[0]["activeEnergyBurned"]
+            console.log("Calories burned", cal)
+            setCalories(cal)
+
+            var time = results[0]["appleExerciseTime"]
+            console.log("Exercise time", time)
+            setExerciseTime(time)
+          },
+        )
+      
+        AppleHealthKit.getStepCount(
+          ({}),
+          (err, results) => {
+            if (err) {
+              return
+            }
+            
+            var steps = Number(results["value"]).toFixed(0)
+            console.log("Steps:", steps)
+            setStepCount(steps)
+          },
+        )
+    
+      })
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+
+  console.log("START EFFECT")
   useEffect( () => {
     retrieveUserData()
-  }, [])
+    retrieveHealthKit()
+    console.log("INSIDE #2")
+    console.log("Height + Weight", height, weight)
+    setBmi(((weight * 703)/ (height ** 2)).toFixed(1)) 
+    console.log("BMI:", bmi)
+
+    setCaloricMaint(Math.floor(weight * 15))
+    console.log("Caloric Maint: ", caloricMaint)
+
+    var temp_bmr = (4.536 * weight) + (15.88 * height) - (5 * parseInt(age))
+    setHealthScore( Math.floor((Math.min((exerciseTime / 30) * 0.5, 0.5) + Math.min((stepCount / 10000) * 0.3, 0.3) + Math.min((calories / temp_bmr) * 0.2, 0.2)) * 100 ))
+    console.log("EXIT #2")
+    setHealthScore(30)
+
+    postCaloricMain()
+
+    const fitnessGoal = fitness
+
+    
+    if (fitnessGoal == "Gain muscle") {
+      setCaloricGoal(caloricMaint + 200)
+    }
+    else if (fitnessGoal == "Lose weight") {
+      setCaloricGoal(caloricMaint - 200)
+    }
+    else {
+      setCaloricGoal(caloricMaint)
+    }
+
+  }, [height, weight, caloricMaint, healthScore])
+  console.log("END EFFECT")
+
 
   const retrieveUserData = async () => {
     try {
@@ -35,6 +174,7 @@ const Profile = () => {
     }
   }
 
+
   return (
       <KeyboardAvoidingView 
         style={styles.container}
@@ -45,7 +185,7 @@ const Profile = () => {
         <Text style={styles.profileHeading}>{name}</Text>
         
         <View style={styles.profileRow}>
-          <Text style={styles.bodyText}>Gender</Text>
+          <Text style={styles.bodyText}>Genders</Text>
           <Text style={styles.bodyText}>{gender}</Text>
         </View>
 
@@ -55,17 +195,17 @@ const Profile = () => {
         </View>
         <View style={styles.profileRow}>
           <Text style={styles.bodyText}>Fitness score</Text>
-          <Text style={styles.bodyText}>95</Text>
+          <Text style={styles.bodyText}>{healthScore}</Text>
         </View>
 
         <View style={styles.profileRow}>
           <Text style={styles.bodyText}>Current BMI</Text>
-          <Text style={styles.bodyText}>25</Text>
+          <Text style={styles.bodyText}>{bmi}</Text>
         </View>
 
         <View style={styles.profileRow}>
           <Text style={styles.bodyText}>Caloric Maintenance</Text>
-          <Text style={styles.bodyText}>2500</Text>
+          <Text style={styles.bodyText}>{caloricMaint}</Text>
         </View>
         </View>
 
@@ -84,7 +224,7 @@ const Profile = () => {
 
           <View style={styles.profileRow}>
             <Text style={styles.bodyText}>Daily caloric goal</Text>
-            <Text style={styles.bodyText}>2500</Text>
+            <Text style={styles.bodyText}>{caloricGoal}</Text>
           </View>
 
         </View>

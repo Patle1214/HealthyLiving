@@ -10,6 +10,83 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import Options from './Options';
+import AppleHealthKit, { HealthValue, HealthKitPermissions} from 'react-native-health';
+
+const permissions = {
+  permissions: {
+    read: [AppleHealthKit.Constants.Permissions.DateOfBirth, 
+      AppleHealthKit.Constants.Permissions.ActivitySummary,
+      AppleHealthKit.Constants.Permissions.StepCount,
+      AppleHealthKit.Constants.Permissions.SleepAnalysis,
+      AppleHealthKit.Constants.Permissions.Height,
+      AppleHealthKit.Constants.Permissions.Weight]
+  },
+}
+
+AppleHealthKit.initHealthKit(permissions, (error) => {
+  /* Called after we receive a response from the system */
+
+  if (error) {
+    console.log('[ERROR] Cannot grant permissions!')
+  }
+
+  /* Can now read or write to HealthKit */
+
+  const options = {
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+  }
+
+  AppleHealthKit.getActivitySummary(
+    (options),
+    (err, results) => {
+      if (err) {
+        return
+      }
+      //console.log(results)
+    },
+  )
+
+  AppleHealthKit.getStepCount(
+    ({}),
+    (err, results) => {
+      if (err) {
+        return
+      }
+      //console.log(results)
+    },
+  )
+
+  const sleepOptions = {
+    startDate: new Date(Date.now() - ( 3600 * 1000 * 24 * 2)).toISOString(),
+    endDate: new Date(Date.now() - ( 3600 * 1000 * 24)).toISOString(),
+  }
+
+  AppleHealthKit.getSleepSamples((sleepOptions), (err, results) => {
+    if (err) {
+      //console.log(err)
+      return;
+    }
+    //console.log(results)
+  });
+
+  AppleHealthKit.getLatestHeight(null, (err, results) => {
+    if (err) {
+      //console.log('error getting latest height: ', err)
+      return
+    }
+    //console.log(results)
+  })
+
+  AppleHealthKit.getLatestWeight({unit: 'pound'}, (err, results) => {
+    if (err) {
+      //console.log('error getting latest weight: ', err)
+      return
+    }
+    //console.log(results)
+  })
+
+})
 
 var nums= Array.from(Array(100+1).keys()).slice(18) 
 const data = {'Chicken Pilaf Salad': 500, 'Trader Joe\'s Salad': 200, 'Organic Pesto Pasta': 300, 'Jamba Juice White Gummy': 400, 'Panera Bread Chicken Soup': 500};
@@ -21,14 +98,32 @@ const Home = () => {
   let iconHeight = 26;
   let iconWidth = 26;
   const navigation = useNavigation()
-  const [totalCalories, setTotalCalories] = useState(2500)
+  const [totalCalories, setTotalCalories] = useState(2099)
   const [cardStates, setCardStates] = useState(Array(5).fill(false));
   const [jsonData, setJsonData] = useState({})
+  const [cards, setCards] = useState([])
+  const [fitnessGoal, setFitnessGoal] = useState('')
+
+  const [startIndex, setStartIndex] = useState(0)
+  const [endIndex, setEndIndex] = useState(5)
+
+  const [caloricGoal, setCaloricGoal] = useState(2099)
+
 
 
   useEffect(() => {
-    checkUserAge();
+    checkUserAge()
   }, []);
+
+  const retrieveCalories = async () => {
+    try {
+      const temp = await AsyncStorage.getItem('caloricMaint')
+      setCaloricGoal(temp)
+    }
+    catch (err) {
+      return
+    }
+  }
 
 
   const checkUserAge = async () => {
@@ -41,9 +136,11 @@ const Home = () => {
         }
   
         const storedAge = await AsyncStorage.getItem('userAge');
+        const fit = await AsyncStorage.getItem('userFitness')
         if (storedAge !== null) {
           // Age is already stored, do something with it (e.g., navigate to the next screen)
           // Example: navigation.navigate('Home');
+          setFitnessGoal(fit)
           console.log("Already has age")
           // navigation.navigate("Home")
         }
@@ -53,17 +150,18 @@ const Home = () => {
     };
 
 
-  const handleCardPress = (index, key) => {
+  const handleCardPress = (index, key, value) => {
     setCardStates((prevStates) => {
       const newStates = [...prevStates];
       newStates[index] = !newStates[index];
       console.log('press!')
       console.log(cardStates)
+      console.log(jsonData["IRVINE"][key][0])
       if (newStates[index]) {
-        setTotalCalories(totalCalories - temp_data[key][0][3][0])
+        setTotalCalories(totalCalories - jsonData["IRVINE"][key][0][3][0])
       }
       else {
-        setTotalCalories(totalCalories + temp_data[key][0][3][0])
+        setTotalCalories(totalCalories + jsonData["IRVINE"][key][0][3][0])
       }
       return newStates;
     });
@@ -77,42 +175,58 @@ const Home = () => {
     </TouchableOpacity>
   ));
   */ }
-  const cards = Object.entries(temp_data).slice(0, 10).map(([key, value], index) => (
-    <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index , key)}>
-      <View style={styles.column}>
-        <Text style={styles.card_title}>{value[0][0]}</Text>
-        <Text>{key}</Text>
-      </View>
-      <View style={styles.column_two}>
-        <Text>{value[0][3][0]} Cal</Text>
-        <Text>{value[0][3][1]} Protein</Text>
-        <Text>{value[0][3][2]} Sugar</Text>
-      </View>
 
 
 
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://192.168.0.83:5000/', {
+        params: {
+          goal: fitnessGoal
+        }
+      });
+      //console.log(response)
+      setJsonData(await response.data);
+      // retrieveCalories()
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
-    </TouchableOpacity>
-  ));
+  useEffect(() => {
+    fetchData()
+    console.log(jsonData)
 
-
-
-  useEffect(()=>{
-    axios.get('http://192.168.0.249:5000/').then(response => {
-      // console.log("SUCCESS DATA HERE->", response)
-      //const string_resp = JSON.stringify(response)
-      //setJsonData(JSON.parse(string_resp))
-      console.log(response)
-      setJsonData(JSON.parse(response.data))
-      console.log(jsonData)
-      //setJsonData(JSON.stringify(response))
-      //setJsonData(response)
-    }).catch(error => {
-      console.log(error)
-    })
   }, [])
 
-    console.log
+
+
+  useEffect(() => {
+    if (jsonData["IRVINE"]) {
+      const newCards = Object.entries(jsonData["IRVINE"]).slice(startIndex, endIndex).map(([key, value], index) => (
+        <TouchableOpacity key={key} style={[styles.card, cardStates[index] && styles.active_card]} activeOpacity={cardStates[index] === true ? 1 : 0.5} onPress={() => handleCardPress(index, key, value)}>
+          <View style={styles.column}>
+            <Text>{key}</Text>
+            <Text>{value[0][0]}</Text>
+          </View>
+          <View style={styles.column_two}>
+            <Text>{value[0][3][0]} Cal</Text>
+            <Text>{value[0][3][1]}g Protein</Text>
+            <Text>{value[0][3][2]}g Sugar</Text>
+          </View>
+
+        </TouchableOpacity>
+      ));
+      setCards(newCards);
+    }
+  }, [jsonData, cardStates, startIndex]);
+
+  const handleRefresh = () => {
+    console.log("start: ", startIndex)
+    setStartIndex(prevState => prevState + 10)
+    setEndIndex(prevState => prevState + 10)
+    
+  };
 
 
 
@@ -138,7 +252,10 @@ const Home = () => {
         */ }
 
       </View>
-      <Text>Calories remaining: {totalCalories}</Text>
+      {/* <Text>Calories remaining: {caloricGoal}</Text> */}
+
+      <TouchableOpacity style={styles.refresh} onPress={() => handleRefresh()}><Text style={styles.bodyTextWhite}>Refresh</Text></TouchableOpacity>
+
       <ScrollView contentContainerStyle={styles.cardContainer}>{cards}</ScrollView>
 
 
@@ -304,7 +421,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignContent: 'center',
     alignItems: 'center',
-    justifyContent:' center',
+    justifyContent:'center',
   },
 
   temp: {
@@ -318,6 +435,18 @@ const styles = StyleSheet.create({
   column_two: {
     flex: 3,
     textAlign: 'right',
-  }
+  },
+  
+  refresh: {
+    marginTop: 4,
+    borderRadius: 10,
+    padding: 8, 
+    backgroundColor: '#1679C1',
+    color:'#FFFFFF',
+  },
+
+  bodyTextWhite: {
+    color: '#FFFFFF'
+  },
 
 })
